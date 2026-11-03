@@ -26,8 +26,7 @@ When a new image set appears on Hugging Face, the workstation side tells you its
 
 - Repository: https://github.com/Retinal-Research/Retify, branch `main`. Licence MIT (code only; see §8).
 - Site: https://retinal-research.github.io/Retify/, GitHub Pages with source "GitHub Actions", deployed by `.github/workflows/pages.yml` on every push to `main`.
-- The repository variable `RETIFY_DATA_URL` is **not set yet**, so the live page says it has no image folder. The image dataset is staged on the workstation and waits for the owner's upload.
-- Planned dataset: `hwang714/retify-eyepacs` (public), tag `v0.1.0`, one set `eyepacs-bad2good` with 801 cases. Once it exists, set the variable to `https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/` and re-run the workflow (§6).
+- Image data: Hugging Face dataset `hwang714/retify-eyepacs` (public), tag `v0.1.0`, one set `eyepacs-bad2good` with 801 cases. The repository variable `RETIFY_DATA_URL` is `https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/`; the live site shows the cases, and `tests/e2e.mjs` passes against it.
 - Answers currently stay in the reviewer's browser and reach the lab only as a downloaded file. Sending them automatically to the lab is the next task (§7).
 
 ## 4. Repository layout
