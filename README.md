@@ -63,10 +63,12 @@ The page reads the data folder from `web/config.js`; a `?data=<url>` parameter i
 ### Running it locally
 
 ```
-python -m http.server 8000 --directory web
+python tests/serve.py <data folder>
 ```
 
-then open `http://localhost:8000/?data=<data folder URL>`. The data folder must be reachable from the browser: a Hugging Face URL works directly, and a local folder can be served by the same kind of server on another port only if it sends CORS headers, so the simplest local test is to place the data folder inside `web/` (it is git-ignored) and use `?data=data/`.
+serves the page and a local data folder from one address; open `http://127.0.0.1:8811/?data=/data/`. With a Hugging Face data URL, any static server works: `python -m http.server 8000 --directory web`, then `http://localhost:8000/?data=<URL>`. `node tests/e2e.mjs <page URL> <output folder>` runs the whole review in a headless Chrome or Edge and checks it.
+
+Maintainers and agents: [AGENTS.md](AGENTS.md) describes the design, the publishing steps, the rules, and the planned relay that will send answers to the lab automatically.
 
 ### Publishing images
 
