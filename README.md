@@ -81,7 +81,7 @@ hf repo tag create hwang714/retify-eyepacs v0.1.0 --repo-type dataset
 
 ### Deploying
 
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes `web/` to GitHub Pages on every push to `main`. It writes `web/config.js` from the repository variable `RETIFY_DATA_URL` (here `https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/`) and first checks that the manifest and the first image are reachable from a browser. Without the variable the job is skipped. In the repository settings, Pages must use "GitHub Actions" as its source.
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes `web/` to GitHub Pages on every push to `main`. It writes `web/config.js` from the repository variable `RETIFY_DATA_URL` (here `https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/`) and first checks that the manifest and the first image are reachable from a browser. Without the variable the page is still published and says that it has no image folder. In the repository settings, Pages must use "GitHub Actions" as its source.
 
 ## Offline version
 
@@ -94,7 +94,7 @@ pyinstaller --onefile --console --name Retify_Label local/label_tool.py
 
 ## Licence and acknowledgements
 
-Retify's code is released under the GNU General Public License v3.0 (see [LICENSE](LICENSE)). The review images are not covered by it: they derive from EyePACS photographs, and their use is subject to the EyePACS terms.
+Retify's code is released under the MIT License (see [LICENSE](LICENSE)). The review images are kept apart from the code, in the Hugging Face dataset, and the code licence does not cover them: they derive from EyePACS photographs, and their use is subject to the EyePACS terms.
 
 Vessel tracing and quality grades come from [AutoMorph](https://github.com/rmaphoh/AutoMorph):
 

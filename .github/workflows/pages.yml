@@ -2,7 +2,8 @@
 # answers stay in the reviewer's browser until they download them.
 # The images are not part of the site; the page loads them from RETIFY_DATA_URL (a repository variable,
 # e.g. a Hugging Face dataset at a version tag, https://huggingface.co/datasets/<owner>/<repo>/resolve/<tag>/),
-# which must allow cross-origin requests. Without that variable the job is skipped.
+# which must allow cross-origin requests. Without that variable the page is still published and says that
+# it has no image folder.
 name: pages
 on:
   push:
@@ -20,17 +21,18 @@ concurrency:
 
 jobs:
   build:
-    if: vars.RETIFY_DATA_URL != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Point the page at the data
+        if: vars.RETIFY_DATA_URL != ''
         env:
           DATA_URL: ${{ vars.RETIFY_DATA_URL }}
         run: |
           printf 'window.RETIFY_DATA_URL = %s;\n' "$(jq -Rn --arg u "$DATA_URL" '$u')" > web/config.js
           cat web/config.js
       - name: Check that the data is reachable from a browser
+        if: vars.RETIFY_DATA_URL != ''
         env:
           DATA_URL: ${{ vars.RETIFY_DATA_URL }}
         run: |
