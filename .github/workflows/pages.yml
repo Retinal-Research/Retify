@@ -1,0 +1,54 @@
+# The review page as a static site on GitHub Pages. The page has no server: images load from the data folder,
+# answers stay in the reviewer's browser until they download them.
+# The images are not part of the site; the page loads them from RETIFY_DATA_URL (a repository variable,
+# e.g. a Hugging Face dataset at a version tag, https://huggingface.co/datasets/<owner>/<repo>/resolve/<tag>/),
+# which must allow cross-origin requests. Without that variable the job is skipped.
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: vars.RETIFY_DATA_URL != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point the page at the data
+        env:
+          DATA_URL: ${{ vars.RETIFY_DATA_URL }}
+        run: |
+          printf 'window.RETIFY_DATA_URL = %s;\n' "$(jq -Rn --arg u "$DATA_URL" '$u')" > web/config.js
+          cat web/config.js
+      - name: Check that the data is reachable from a browser
+        env:
+          DATA_URL: ${{ vars.RETIFY_DATA_URL }}
+        run: |
+          url="${DATA_URL%/}/manifest.json"
+          curl -sfIL -H 'Origin: https://example.github.io' "$url" | grep -qi '^access-control-allow-origin' \
+            || { echo "::error::$url is missing or does not allow cross-origin requests"; exit 1; }
+          first=$(curl -sfL "$url" | jq -r '.sets[0].dir + .sets[0].cases[0]')
+          curl -sfIL "${DATA_URL%/}/$first" > /dev/null || { echo "::error::first image $first is missing"; exit 1; }
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

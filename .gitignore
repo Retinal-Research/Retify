@@ -1,0 +1,18 @@
+# Review images and answers are never part of this repository: images are published as a separate
+# dataset (see README), answers belong to the reviewers.
+*.jpg
+*.jpeg
+*.png
+*.xlsx
+*.csv
+labels*.json
+order.txt
+images/
+data/
+
+# generated
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec

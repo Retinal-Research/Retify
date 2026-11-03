@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retify · Hallucination review</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header class="top">
+ <div class="mark"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg></div>
+ <div class="brand"><div class="eyebrow">Enhancement review</div><h1>Retify · Hallucination review</h1><div class="sub" id="setname">Loading…</div></div>
+ <div class="top-right"><span id="save">Saved in this browser</span>
+  <button id="help">How to</button><button id="loadbtn" title="Continue from an answers file downloaded earlier">Load answers</button>
+  <button class="primary" id="dl" title="Download your answers as a spreadsheet">Download answers</button></div>
+</header>
+<div class="work">
+ <aside class="side">
+  <div class="eyebrow">Review queue</div><h2>Cases <span id="ntotal"></span></h2>
+  <div class="prog"><div class="pline"><span>Progress</span><b id="pdone"></b></div><div class="pbar"><i id="pbar"></i></div>
+   <div class="pline"><span>Pass <b id="pyes"></b></span><span>Halluc. <b id="pno"></b></span><span>Left <b id="pleft"></b></span></div></div>
+  <div class="lbl">Show</div>
+  <div class="seg" id="filter"><button data-f="all" class="on">All</button><button data-f="p">To do</button><button data-f="y">Pass</button><button data-f="n">Halluc.</button></div>
+  <div class="lbl">Go to case number or file name</div><input id="go" placeholder="e.g. 125 or 13026_right">
+  <div class="legend"><span class="lg-p">To do</span><span class="lg-y">Pass</span><span class="lg-n">Hallucination</span></div>
+  <div id="list"></div>
+ </aside>
+ <main>
+  <div class="instr">
+   <div class="eyebrow">The only question</div>
+   <div class="q">Is the ENHANCED image free of hallucinations?</div>
+   <div class="r">Hallucination = vessels that are <b>invented, missing, displaced or distorted</b> compared with the original. Answer <b>Yes</b> = passes, <b>No</b> = hallucination. Ignore changes of color, brightness and sharpness.<br>
+   In the picture: <span class="dot" style="background:#4096ff"></span><b>blue</b> = vessel only after enhancement · <span class="dot" style="background:#ff3c3c"></span><b>red</b> = vessel lost after enhancement · yellow boxes 1–4 are zoomed in panel D. The automatic marks can be wrong; your judgement decides.</div>
+  </div>
+  <div id="caseview">
+   <div class="toolbar"><h2 id="title"></h2><span class="pill" id="fname"></span><span class="state p" id="state"></span>
+    <div class="navr"><button id="prev">← Previous</button><button id="next">Next →</button><button id="nextp">Next to do</button></div></div>
+   <div class="card"><img id="img" alt="case image" title="Click to enlarge"><span class="zoomhint">Click image to enlarge</span></div>
+   <div class="answer">
+    <div class="big"><button class="yes" id="yes">Yes — passes<small>press Y</small></button><button class="no" id="no">No — hallucination<small>press N</small></button></div>
+    <input class="note" id="note" placeholder="Optional note for this case (saved automatically)">
+   </div>
+  </div>
+  <div class="done" id="doneview" hidden><h2>All cases are answered — thank you!</h2>
+   <p>Please <b>download your answers</b> and send the file back to us.</p>
+   <p><button class="primary" id="dl2">Download answers (labels.xlsx)</button></p>
+   <p class="muted">You can still click any case on the left to review or change it.</p></div>
+  <div class="done" id="errview" hidden><h2>The images could not be loaded</h2><p id="errmsg"></p></div>
+ </main>
+</div>
+<div class="modal" id="helpbox" hidden><div class="box" style="width:min(660px,92vw)"><h2>How to review</h2>
+ <p>For each case, look at the enhanced photograph (B) and compare it with the original (A). Panel C shows where vessels changed; panel D zooms into the yellow boxes: original · enhanced · enhanced with outlines · red-free original.</p>
+ <p>Click <b>No</b> if the enhanced image has invented, missing, displaced or distorted vessels; otherwise click <b>Yes</b> (passes). The next unanswered case opens automatically. You can return to any case from the list on the left and change the answer.</p>
+ <p>Keys: <kbd>Y</kbd> yes, passes · <kbd>N</kbd> no, hallucination · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>Enter</kbd> enlarge the image.</p>
+ <p>Your answers are kept in this browser on this computer only; nothing is uploaded. You can close the page and continue later in the same browser. When finished, click <b>Download answers</b> and send us the file. To continue on another computer, download the answers there first, then use <b>Load answers</b>.</p>
+ <div class="row"><button class="primary" id="helpok">Got it</button></div></div></div>
+<div class="modal" id="dlbox" hidden><div class="box"><h2>Download answers</h2>
+ <p id="dlsum"></p>
+ <div class="row"><button id="dljson">JSON</button><button id="dlcsv">CSV</button><button class="primary" id="dlxlsx">Excel (.xlsx)</button><button id="dlclose">Close</button></div></div></div>
+<div class="viewer" id="viewer" hidden><img id="vimg" alt=""></div>
+<input type="file" id="loadfile" accept=".json,.xlsx,.csv,application/json" hidden>
+<script src="xlsx.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
