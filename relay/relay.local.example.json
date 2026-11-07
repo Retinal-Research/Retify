@@ -1,0 +1,8 @@
+{
+  "data_url": "https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/",
+  "data_dir": "~/retify-labels",
+  "host": "127.0.0.1",
+  "port": 8096,
+  "origins": ["https://retinal-research.github.io"],
+  "hf": {"repo": "hwang714/retify-labels", "token_env": "RETIFY_HF_TOKEN", "token_file": "~/.config/retify/hf-token", "every_minutes": 5}
+}

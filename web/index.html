@@ -12,7 +12,7 @@
 <header class="top">
  <div class="mark"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg></div>
  <div class="brand"><div class="eyebrow">Enhancement review</div><h1>Retify · Hallucination review</h1><div class="sub" id="setname">Loading…</div></div>
- <div class="top-right"><span id="save">Saved in this browser</span>
+ <div class="top-right"><span id="who" hidden></span><span id="save">Saved in this browser</span>
   <button id="help">How to</button><button id="loadbtn" title="Continue from an answers file downloaded earlier">Load answers</button>
   <button class="primary" id="dl" title="Download your answers as a spreadsheet">Download answers</button></div>
 </header>
@@ -21,6 +21,7 @@
   <div class="eyebrow">Review queue</div><h2>Cases <span id="ntotal"></span></h2>
   <div class="prog"><div class="pline"><span>Progress</span><b id="pdone"></b></div><div class="pbar"><i id="pbar"></i></div>
    <div class="pline"><span>Pass <b id="pyes"></b></span><span>Halluc. <b id="pno"></b></span><span>Left <b id="pleft"></b></span></div></div>
+  <div class="team" id="team" hidden><div class="lbl">Everyone's progress <span class="muted">(answers stay private)</span></div><div id="teamrows"></div></div>
   <div class="lbl">Show</div>
   <div class="seg" id="filter"><button data-f="all" class="on">All</button><button data-f="p">To do</button><button data-f="y">Pass</button><button data-f="n">Halluc.</button></div>
   <div class="lbl">Go to case number or file name</div><input id="go" placeholder="e.g. 125 or 13026_right">
@@ -31,31 +32,48 @@
   <div class="instr">
    <div class="eyebrow">The only question</div>
    <div class="q">Is the ENHANCED image free of hallucinations?</div>
-   <div class="r">Hallucination = vessels that are <b>invented, missing, displaced or distorted</b> compared with the original. Answer <b>Yes</b> = passes, <b>No</b> = hallucination. Ignore changes of color, brightness and sharpness.<br>
-   In the picture: <span class="dot" style="background:#4096ff"></span><b>blue</b> = vessel only after enhancement · <span class="dot" style="background:#ff3c3c"></span><b>red</b> = vessel lost after enhancement · yellow boxes 1–4 are zoomed in panel D. The automatic marks can be wrong; your judgement decides.</div>
+   <div class="r">Compare the enhanced picture (B) with the original (A). Answer <b>No</b> if vessels were <b>added, lost, moved or bent</b>; otherwise <b>Yes</b>. Ignore changes of color, brightness and sharpness.<br>
+   In panel C: <span class="dot" style="background:#4096ff"></span><b>blue</b> = new vessel · <span class="dot" style="background:#ff3c3c"></span><b>red</b> = lost vessel. The yellow boxes 1–4 are shown close up in panel D. The colors are only a guide; trust your eyes.</div>
   </div>
   <div id="caseview">
    <div class="toolbar"><h2 id="title"></h2><span class="pill" id="fname"></span><span class="state p" id="state"></span>
     <div class="navr"><button id="prev">← Previous</button><button id="next">Next →</button><button id="nextp">Next to do</button></div></div>
-   <div class="card"><img id="img" alt="case image" title="Click to enlarge"><span class="zoomhint">Click image to enlarge</span></div>
+   <div class="card"><div class="stage" id="stage"><img id="img" alt="case image" draggable="false"></div>
+    <div class="viewbtns"><button id="resetview" title="Back to the whole picture (double-click the picture)">Reset view</button><button id="fullsize" title="See the picture full size (Enter)">Full size</button></div>
+    <span class="zoomhint">Scroll to zoom · drag to move</span></div>
    <div class="answer">
     <div class="big"><button class="yes" id="yes">Yes — passes<small>press Y</small></button><button class="no" id="no">No — hallucination<small>press N</small></button></div>
     <input class="note" id="note" placeholder="Optional note for this case (saved automatically)">
    </div>
   </div>
   <div class="done" id="doneview" hidden><h2>All cases are answered — thank you!</h2>
-   <p>Please <b>download your answers</b> and send the file back to us.</p>
+   <p id="donemsg">Please <b>download your answers</b> and send the file back to us.</p>
    <p><button class="primary" id="dl2">Download answers (labels.xlsx)</button></p>
    <p class="muted">You can still click any case on the left to review or change it.</p></div>
   <div class="done" id="errview" hidden><h2>The images could not be loaded</h2><p id="errmsg"></p></div>
  </main>
 </div>
+<div class="modal" id="welcome" hidden><div class="box" style="width:min(600px,92vw)"><h2>Welcome to Retify</h2>
+ <p>A computer made each poor photo of the eye clearer. Sometimes it gets the vessels wrong. Your task: say whether the clearer picture still shows the same vessels.</p>
+ <ol class="steps">
+  <li>Compare the enhanced picture (<b>B</b>) with the original (<b>A</b>).</li>
+  <li>In panel <b>C</b>: <span class="dot" style="background:#4096ff"></span><b>blue</b> = new vessel, <span class="dot" style="background:#ff3c3c"></span><b>red</b> = lost vessel. The colors are only a guide; trust your eyes.</li>
+  <li>Click <b>Yes</b> if the vessels are the same, <b>No</b> if vessels were added, lost, moved or bent. Or press <kbd>Y</kbd> / <kbd>N</kbd>.</li>
+ </ol>
+ <p>Scroll on the picture to zoom in. <b>How to</b> at the top shows this again.</p>
+ <div class="row"><button class="primary" id="welcomeok">Start</button></div></div></div>
 <div class="modal" id="helpbox" hidden><div class="box" style="width:min(660px,92vw)"><h2>How to review</h2>
- <p>For each case, look at the enhanced photograph (B) and compare it with the original (A). Panel C shows where vessels changed; panel D zooms into the yellow boxes: original · enhanced · enhanced with outlines · red-free original.</p>
- <p>Click <b>No</b> if the enhanced image has invented, missing, displaced or distorted vessels; otherwise click <b>Yes</b> (passes). The next unanswered case opens automatically. You can return to any case from the list on the left and change the answer.</p>
- <p>Keys: <kbd>Y</kbd> yes, passes · <kbd>N</kbd> no, hallucination · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>Enter</kbd> enlarge the image.</p>
- <p>Your answers are kept in this browser on this computer only; nothing is uploaded. You can close the page and continue later in the same browser. When finished, click <b>Download answers</b> and send us the file. To continue on another computer, download the answers there first, then use <b>Load answers</b>.</p>
+ <p>Each picture has four parts: <b>A</b> the original, <b>B</b> the enhanced picture, <b>C</b> the vessels of both (<span class="dot" style="background:#4096ff"></span>blue = new vessel, <span class="dot" style="background:#ff3c3c"></span>red = lost vessel, green = in both), <b>D</b> close-ups of the yellow boxes.</p>
+ <p>Click <b>No</b> if vessels in B were added, lost, moved or bent compared with A; otherwise click <b>Yes</b>. The next case opens by itself. You can go back to any case from the list on the left and change your answer.</p>
+ <p>On the picture: scroll to zoom in, drag to move around, double-click (or <b>Reset view</b>) to see it whole again. <b>Full size</b> opens it on the whole screen.</p>
+ <p>Keys: <kbd>Y</kbd> yes, passes · <kbd>N</kbd> no, hallucination · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>Enter</kbd> full size · <kbd>0</kbd> reset view.</p>
+ <p id="helpstore">Your answers are kept in this browser on this computer only; nothing is uploaded. You can close the page and continue later in the same browser. When finished, click <b>Download answers</b> and send us the file. To continue on another computer, download the answers there first, then use <b>Load answers</b>.</p>
  <div class="row"><button class="primary" id="helpok">Got it</button></div></div></div>
+<div class="modal" id="sessbox" hidden><div class="box"><h2>Who is reviewing?</h2>
+ <p>Type your name to continue where you left off. Your answers are saved automatically, so you can continue on any computer. Others see only how many cases you have answered.</p>
+ <form id="sessform"><input class="note" id="sessname" autocomplete="name" placeholder="e.g., Tina" maxlength="80"></form>
+ <div id="sessres"></div>
+ <div class="row" id="sessrow"><button id="sesslocal" title="Answers stay on this computer only; download them when you finish">Continue Without Saving</button><button class="primary" id="sessfind">Find my session</button></div></div></div>
 <div class="modal" id="dlbox" hidden><div class="box"><h2>Download answers</h2>
  <p id="dlsum"></p>
  <div class="row"><button id="dljson">JSON</button><button id="dlcsv">CSV</button><button class="primary" id="dlxlsx">Excel (.xlsx)</button><button id="dlclose">Close</button></div></div></div>

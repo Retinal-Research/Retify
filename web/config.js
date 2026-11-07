@@ -3,3 +3,6 @@
 // The GitHub Pages workflow rewrites this file from the repository variable RETIFY_DATA_URL.
 // A ?data=<url> parameter in the page address overrides it (useful for a local test).
 window.RETIFY_DATA_URL = "";
+// The lab's relay, which keeps every reviewer's answers (relay/relay.py), e.g. https://<lab host>/api/retify.
+// From the repository variable RETIFY_LABELS_URL; ?relay=<url> overrides it. Empty: answers stay in the browser.
+window.RETIFY_LABELS_URL = "";

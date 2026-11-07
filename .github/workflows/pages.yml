@@ -1,5 +1,5 @@
-# The review page as a static site on GitHub Pages. The page has no server: images load from the data folder,
-# answers stay in the reviewer's browser until they download them.
+# The review page as a static site on GitHub Pages: images load from the data folder; answers go to the lab's
+# relay (RETIFY_LABELS_URL, relay/relay.py) when it is set, and otherwise stay in the reviewer's browser.
 # The images are not part of the site; the page loads them from RETIFY_DATA_URL (a repository variable,
 # e.g. a Hugging Face dataset at a version tag, https://huggingface.co/datasets/<owner>/<repo>/resolve/<tag>/),
 # which must allow cross-origin requests. Without that variable the page is still published and says that
@@ -24,13 +24,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Point the page at the data
+      - name: Point the page at the data and the relay
         if: vars.RETIFY_DATA_URL != ''
         env:
           DATA_URL: ${{ vars.RETIFY_DATA_URL }}
+          LABELS_URL: ${{ vars.RETIFY_LABELS_URL }}
         run: |
-          printf 'window.RETIFY_DATA_URL = %s;\n' "$(jq -Rn --arg u "$DATA_URL" '$u')" > web/config.js
+          printf 'window.RETIFY_DATA_URL = %s;\nwindow.RETIFY_LABELS_URL = %s;\n' \
+            "$(jq -Rn --arg u "$DATA_URL" '$u')" "$(jq -Rn --arg u "$LABELS_URL" '$u')" > web/config.js
           cat web/config.js
+      - name: Check that the relay answers the page
+        if: vars.RETIFY_LABELS_URL != ''
+        env:
+          LABELS_URL: ${{ vars.RETIFY_LABELS_URL }}
+        run: |
+          curl -sf -H 'Origin: https://retinal-research.github.io' "${LABELS_URL%/}/status" | jq -e .ok > /dev/null \
+            || echo "::warning::the relay at $LABELS_URL/status does not answer; answers will wait in reviewers' browsers until it does"
       - name: Check that the data is reachable from a browser
         if: vars.RETIFY_DATA_URL != ''
         env:

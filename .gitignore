@@ -16,3 +16,7 @@ __pycache__/
 build/
 dist/
 *.spec
+
+# the relay's own settings (paths, tokens): see relay/relay.local.example.json
+relay/relay.local.json
+relay/.venv/

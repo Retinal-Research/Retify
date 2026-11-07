@@ -14,7 +14,7 @@ Enhancement models can make a poor fundus photograph look clear, but they can al
 Reviewers answer one question per case:
 
 > **Is the ENHANCED image free of hallucinations?**
-> Yes = passes. No = hallucination: vessels that are invented, missing, displaced or distorted compared with the original.
+> Yes = passes. No = hallucination: vessels were added, lost, moved or bent compared with the original.
 
 Each case is one picture with four panels:
 
@@ -22,7 +22,7 @@ Each case is one picture with four panels:
 |---|---|
 | **A** | the original photograph |
 | **B** | the enhanced photograph, the one to judge |
-| **C** | vessel changes: vessels traced automatically in both photographs. Green = in both, blue = only after enhancement, red = lost after enhancement |
+| **C** | the vessels of both photographs, traced by a computer. Green = in both, blue = new vessel, red = lost vessel |
 | **D** | close-ups of the yellow boxes 1–4: original, enhanced, enhanced with outlines, red-free original |
 
 The automatic tracing only points to where to look; the reviewer's judgement of the photographs decides.
@@ -31,12 +31,15 @@ The automatic tracing only points to where to look; the reviewer's judgement of 
 
 Open the review page. There is nothing to install and no account.
 
+- The first visit opens a short welcome. In panel C, **blue** = new vessel and **red** = lost vessel.
 - Click **Yes** or **No** under the picture, or press <kbd>Y</kbd> / <kbd>N</kbd>. The next unanswered case opens.
-- <kbd>←</kbd> <kbd>→</kbd> move between cases; any answer can be changed. Click the picture (or press <kbd>Enter</kbd>) to see it full size.
+- <kbd>←</kbd> <kbd>→</kbd> move between cases; any answer can be changed. Scroll on the picture to zoom in and drag to move around; double-click it or click **Reset view** to see it whole. **Full size** (or <kbd>Enter</kbd>) opens it on the whole screen.
 - The list on the left shows every case: orange = to do, green = passes, red = hallucination. "Go to" takes a case number or a file name.
 - An optional note can be typed for each case.
 
-**Answers stay in the browser.** Every answer is kept in that browser on that computer (local storage) and is never uploaded. The page can be closed at any time and continues where it stopped. When finished, click **Download answers** and send the Excel file (CSV and JSON are also offered). To move to another computer, download the answers, then use **Load answers** there; it reads the Excel, CSV or JSON file and keeps the newer answer for each case.
+**Answers are saved automatically.** The first time, the page asks for your name (e.g., Tina) and finds your session; if there is none, it asks for your full name (e.g., Tina Vascullensky) and starts a new one. To continue on another computer, type the same name there. Everyone sees how many cases each reviewer has answered, never their answers. Without a connection, answers are kept on your computer and saved when the connection is back.
+
+**Continue Without Saving** keeps every answer only in that browser on that computer; download them when you finish and send us the file. The page can be closed at any time and continues where it stopped. When finished, click **Download answers** and send the Excel file (CSV and JSON are also offered). To move to another computer, download the answers, then use **Load answers** there; it reads the Excel, CSV or JSON file and keeps the newer answer for each case.
 
 The answers file has one row per case: `no`, `image`, `hallucination` (1 = hallucination, 0 = passes, empty = not answered), `note`, `answered_at`.
 
@@ -68,7 +71,7 @@ python tests/serve.py <data folder>
 
 serves the page and a local data folder from one address; open `http://127.0.0.1:8811/?data=/data/`. With a Hugging Face data URL, any static server works: `python -m http.server 8000 --directory web`, then `http://localhost:8000/?data=<URL>`. `node tests/e2e.mjs <page URL> <output folder>` runs the whole review in a headless Chrome or Edge and checks it.
 
-Maintainers and agents: [AGENTS.md](AGENTS.md) describes the design, the publishing steps, the rules, and the planned relay that will send answers to the lab automatically.
+Maintainers and agents: [AGENTS.md](AGENTS.md) describes the design, the publishing steps, the rules, and the relay (`relay/relay.py`) that keeps the answers on the lab's server.
 
 ### Publishing images
 

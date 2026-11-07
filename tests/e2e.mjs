@@ -47,6 +47,8 @@ ws.onmessage = (m) => {
 await cdp("Page.enable"); await cdp("Runtime.enable");
 await cdp("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: outdir });
 await cdp("Page.navigate", { url }); await sleep(3000);
+check("a first visit shows the welcome", await js(`!$("welcome").hidden`));
+await js(`$("welcomeok").click()`); await sleep(300);
 
 const n = await js(`files.length`);
 check("cases listed", n > 0, n);
