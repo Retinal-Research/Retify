@@ -10,7 +10,7 @@ Reviewers (ophthalmologists) answer one question per case, at the level of the w
 
 > Does the enhanced photo show only real vessels? **Yes** = only real vessels (label 0), **No** = made-up vessels, a hallucination (label 1).
 
-The guidelines (the owner's, 2026-11-07): lost or faded vessels are fine; a new vessel is fine when it is real (a faint trace of it in the original or the red-free close-up); changes of color, brightness, contrast, sharpness or background are fine; a vessel that is not in the original at all is not; a real vessel moved, bent onto another path or joined wrongly is not (this last point is the agent's reading of "等等", to be confirmed by the owner). Until 2026-11-07 the page said "No if vessels were added, lost, moved or bent", so lost vessels counted as No: annotations made before that date follow the old rule.
+The guidelines (the owner's, 2026-11-07): lost or faded vessels are fine; a new vessel is fine when it is real (a faint trace of it in the original or the red-free close-up); changes of color, brightness, contrast, sharpness or background are fine; a vessel that is not in the original at all is not. A real vessel moved, bent or joined wrongly is not listed as not fine (the owner took that rule out on 2026-11-07). The current wording is always `web/guidelines.json`. Until 2026-11-07 the page said "No if vessels were added, lost, moved or bent", so lost vessels counted as No: annotations made before that date follow the old rule.
 
 Each case is one pre-rendered JPEG with four panels (A original, B enhanced, C automatic vessel-change map, D close-ups of four boxes). The panels are made offline on the lab workstation and are not this repository's concern; this repository only shows them and collects the answers.
 

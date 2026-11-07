@@ -11,8 +11,7 @@
     { "short": "changes in color or brightness", "full": "Changes in color, brightness, contrast or sharpness, and a smoother or grainier background." }
   ],
   "not_fine": [
-    { "short": "made-up vessels", "full": "A vessel that is not in the original at all, not even faintly." },
-    { "short": "real vessels moved, bent or joined wrongly", "full": "A real vessel moved to another place, bent onto another path, or joined to a vessel it does not meet." }
+    { "short": "made-up vessels", "full": "A vessel that is not in the original at all, not even faintly." }
   ],
   "notes": [
     "The blue and red marks only show where to look; the computer can miss vessels or mark noise. Decide from the photos.",
