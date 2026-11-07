@@ -22,12 +22,12 @@ Each case is one pre-rendered JPEG with four panels (A original, B enhanced, C a
 
 When a new image set appears on Hugging Face, the workstation side tells you its id and version tag; your part is the repository variable and the page.
 
-## 3. Current state (2026-11-03)
+## 3. Current state (2026-11-07)
 
 - Repository: https://github.com/Retinal-Research/Retify, branch `main`. Licence MIT (code only; see §8).
 - Site: https://retinal-research.github.io/Retify/, GitHub Pages with source "GitHub Actions", deployed by `.github/workflows/pages.yml` on every push to `main`.
 - Image data: Hugging Face dataset `hwang714/retify-eyepacs` (public), tag `v0.1.0`, one set `eyepacs-bad2good` with 801 cases. The repository variable `RETIFY_DATA_URL` is `https://huggingface.co/datasets/hwang714/retify-eyepacs/resolve/v0.1.0/`; the live site shows the cases, and `tests/e2e.mjs` passes against it.
-- The relay (§7) is written and tested (`relay/relay.py`): reviewers enter by name, answers go to the lab as they are made, everyone sees everyone's progress but not their answers. Until it runs behind the tunnel and `RETIFY_LABELS_URL` is set, the live page keeps answers in the browser as before.
+- The relay (§7) is live since 2026-11-07: it runs on the lab machine as a boot service behind the tunnel, `RETIFY_LABELS_URL` is set, and it backs up to the private dataset `hwang714/retify-labels`. Reviewers enter by name; answers are saved as they are made; everyone sees everyone's progress, not their answers.
 
 ## 4. Repository layout
 
