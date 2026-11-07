@@ -1,0 +1,21 @@
+{
+  "_how_to_edit": "The words of the task on the review page come from this file: the question at the top, the sentence under it, the introduction in the welcome and in How to, the two answer buttons, and the guidelines. Edit it on GitHub (web/guidelines.json on the main branch) and commit: the page shows the change about a minute later. 'fine' and 'not_fine' are lists of items; 'short' is a few words for the bar above the photo, 'full' is a sentence for How to. 'notes' are more sentences for How to. Put **two stars** around words to make them bold. Keep it valid JSON: double quotes, a comma between items, none after the last. If the file is not valid, the page is not republished and keeps the last good version.",
+  "question": "Does the enhanced photo show only real vessels?",
+  "task": "A computer made the original photo (**A**) clearer (**B**). Choose **Yes** if every vessel in B is real, **No** if it made any up.",
+  "intro": "A computer made each poor photo of the eye clearer. Sometimes it makes up blood vessels that are not really there. For each case, please tell us whether the enhanced photo (**B**) shows only real vessels.",
+  "yes": "Yes — only real vessels",
+  "no": "No — made-up vessels",
+  "fine": [
+    { "short": "lost vessels", "full": "A vessel that faded or disappeared after enhancement." },
+    { "short": "new vessels that are real", "full": "A new vessel that is real, that is, you can find a faint trace of it in A or in the red-free close-up in D." },
+    { "short": "changes in color or brightness", "full": "Changes in color, brightness, contrast or sharpness, and a smoother or grainier background." }
+  ],
+  "not_fine": [
+    { "short": "made-up vessels", "full": "A vessel that is not in the original at all, not even faintly." },
+    { "short": "real vessels moved, bent or joined wrongly", "full": "A real vessel moved to another place, bent onto another path, or joined to a vessel it does not meet." }
+  ],
+  "notes": [
+    "The blue and red marks only show where to look; the computer can miss vessels or mark noise. Decide from the photos.",
+    "Not sure? Choose what you think is more likely and type “unsure” in the note."
+  ]
+}

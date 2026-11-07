@@ -109,15 +109,31 @@ class RelayTest(unittest.TestCase):
         # a new store reads the same answers back from disk
         self.assertEqual(relay.Store(self.s).labels("s1", a["id"]), got["labels"])
 
-    def test_progress_shows_counts_not_answers(self):
+    def test_progress_shows_counts_not_answers_or_names(self):
         _, a, _ = self.call("POST", "/sessions", {"name": "Alpha Reviewer"})
+        _, b, _ = self.call("POST", "/sessions", {"name": "Beta Reviewer"})
         self.call("POST", "/sessions", {"name": "Typo Nobody"})  # never answers: not listed
+        self.call("POST", "/labels", {"set": "s1", "session": b["id"], "answers": [self.answer("2_right.jpg", 0)]}, key=b["key"])
+        time.sleep(1.1)  # the log keeps whole seconds
         self.call("POST", "/labels", {"set": "s1", "session": a["id"], "answers": [self.answer("1_left.jpg", 1), self.answer("3_left.jpg", 0)]}, key=a["key"])
         st, p, _ = self.call("GET", "/progress?set=s1")
         self.assertEqual(st, 200)
         self.assertEqual(p["cases"], 3)
-        self.assertEqual([(r["name"], r["answered"]) for r in p["reviewers"]], [("Alpha Reviewer", 2)])
-        self.assertNotIn("hallucination", json.dumps(p))
+        # in the order they first answered, whatever the counts; names masked
+        self.assertEqual([(r["name"], r["answered"]) for r in p["reviewers"]], [("Be*a Revi***r", 1), ("Al**a Revi***r", 2)])
+        text = json.dumps(p)
+        for secret in ("hallucination", "Alpha", "Beta", "Reviewer", a["id"], b["id"]):
+            self.assertNotIn(secret, text)
+        # the caller's own row, only with its key
+        _, mine, _ = self.call("GET", f"/progress?set=s1&session={a['id']}", key=a["key"])
+        self.assertEqual([r.get("you", False) for r in mine["reviewers"]], [False, True])
+        _, forged, _ = self.call("GET", f"/progress?set=s1&session={a['id']}", key=b["key"])
+        self.assertFalse(any(r.get("you") for r in forged["reviewers"]))
+
+    def test_masked_names(self):
+        for name, want in [("Tina", "Ti*a"), ("Sai", "S*i"), ("Tina Vascullensky", "Ti*a Vascul*****y"), ("Wang, Yalin", "Wa*g, Ya**n"),
+                           ("Al", "A*"), ("J", "J"), ("王亚林", "王*林")]:
+            self.assertEqual(relay.masked(name), want, name)
 
     def test_cors_and_limits(self):
         st, _, h = self.call("GET", "/status")

@@ -24,6 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check the guidelines file
+        # the owner edits web/guidelines.json on GitHub; a broken edit must not reach the page (the last good one stays live)
+        run: |
+          jq -e '(.question | type == "string") and (.task | type == "string")
+                 and (.fine | type == "array") and (.not_fine | type == "array") and ((.fine + .not_fine) | length > 0)
+                 and all((.fine + .not_fine)[]; (.short // .full | type) == "string")' web/guidelines.json > /dev/null \
+            || { echo "::error::web/guidelines.json is not valid; see its _how_to_edit"; exit 1; }
       - name: Point the page at the data and the relay
         if: vars.RETIFY_DATA_URL != ''
         env:

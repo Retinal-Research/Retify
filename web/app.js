@@ -27,7 +27,7 @@ function store(changed) {
     save("Saved in this browser · " + new Date().toLocaleTimeString());
     return true;
   } catch (e) {
-    save("Not saved — download your answers before closing", true);
+    save("Not saved — download your annotations before closing", true);
     return false;
   }
 }
@@ -62,7 +62,7 @@ function show() {
   $("fname").textContent = f.replace(/\.[^.]+$/, "");
   const s = st(f);
   $("state").className = "state " + s;
-  $("state").textContent = s === "y" ? "Answered: Yes (passes)" : s === "n" ? "Answered: No (hallucination)" : "To do";
+  $("state").textContent = s === "y" ? "Annotated: Yes" : s === "n" ? "Annotated: No" : "To do";
   $("img").src = imgUrl(f);
   resetView();
   $("yes").classList.toggle("sel", s === "y"); $("no").classList.toggle("sel", s === "n");
@@ -73,8 +73,8 @@ function show() {
 }
 function finished() {
   list(); $("caseview").hidden = true; $("doneview").hidden = false;
-  $("donemsg").innerHTML = me ? "Your answers are saved. Downloading a copy is optional."
-    : "Please <b>download your answers</b> and send the file back to us.";
+  $("donemsg").innerHTML = me ? "Your annotations are saved. Downloading a copy is optional."
+    : "Please <b>download your annotations</b> and send the file back to us.";
 }
 function go(k) { if (k < 0 || k >= files.length) return; i = k; show(); }
 function answer(v) {
@@ -87,7 +87,7 @@ function answer(v) {
 }
 
 // ---------- download / load answers ----------
-const HEAD = ["no", "image", "hallucination (1 = hallucination / N, 0 = passes / Y)", "note", "answered_at"];
+const HEAD = ["no", "image", "hallucination (1 = made-up vessels / N, 0 = only real vessels / Y)", "note", "annotated_at"];
 function rows() {
   return files.map((f, k) => { const r = lab[f] || {}; return [k + 1, f, r.hallucination ?? "", r.note || "", r.time || ""]; });
 }
@@ -107,8 +107,8 @@ const dl = {
 };
 function openDl() {
   const left = stats(), n = files.length;
-  $("dlsum").textContent = (n - left) + " of " + n + " cases answered" + (left ? " (" + left + " still to do; you can download now and again later)." : ". Thank you!") +
-    " Please send us the Excel file.";
+  $("dlsum").textContent = (n - left) + " of " + n + " cases annotated" + (left ? " (" + left + " still to do; you can download now and again later)." : ". Thank you!") +
+    (me ? " This is a copy; your annotations are already saved." : " Please send us the Excel file.");
   $("dlbox").hidden = false;
 }
 
@@ -128,7 +128,7 @@ function csvRows(text) {
 function fromRows(r) {             // spreadsheet rows -> labels; columns found by their header
   const h = r[0].map((x) => String(x).toLowerCase().replace(/^﻿/, ""));
   const ci = h.findIndex((x) => x === "image"), hi = h.findIndex((x) => x.startsWith("hallucination"));
-  const ni = h.findIndex((x) => x === "note"), ti = h.findIndex((x) => x.startsWith("answered"));
+  const ni = h.findIndex((x) => x === "note"), ti = h.findIndex((x) => x.startsWith("annotated") || x.startsWith("answered"));   // files from before "annotated" too
   if (ci < 0 || hi < 0) throw new Error('the file has no "image" and "hallucination" columns');
   const out = {};
   for (const row of r.slice(1)) {
@@ -143,7 +143,7 @@ async function load(file) {
     let got;
     if (/\.json$/i.test(file.name)) {
       const j = JSON.parse(await file.text());
-      if (j.set && j.set !== set.id) throw new Error("these answers are for another image set (" + j.set + ")");
+      if (j.set && j.set !== set.id) throw new Error("these annotations are for another image set (" + j.set + ")");
       got = j.labels || {};
     } else if (/\.xlsx$/i.test(file.name)) got = fromRows(await XLSX_MINI.read(await file.arrayBuffer()));
     else got = fromRows(csvRows(await file.text()));
@@ -155,7 +155,7 @@ async function load(file) {
       if (!lab[f] || lab[f].hallucination == null || (r.time || "") >= (lab[f].time || "")) { lab[f] = r; n++; took.push(f); }
     }
     store(took);
-    alert("Loaded " + n + " answers from " + file.name + (skip ? " (" + skip + " rows were not cases of this set)." : "."));
+    alert("Loaded " + n + " annotations from " + file.name + (skip ? " (" + skip + " rows were not cases of this set)." : "."));
     const k = nextTodo(0);
     if (k < 0) finished(); else go(k);
   } catch (e) {
@@ -217,25 +217,26 @@ addEventListener("online", () => flush());
 async function team() {
   if (!me) return;
   try {
-    const p = await api("GET", "/progress?set=" + encodeURIComponent(set.id));
+    const p = await api("GET", "/progress?set=" + encodeURIComponent(set.id) + "&session=" + me.id);
     const T = $("teamrows"); T.innerHTML = "";
     for (const r of p.reviewers) {
       const d = document.createElement("div");
-      d.className = "trow" + (r.id === me.id ? " me" : "");
+      d.className = "trow" + (r.you ? " me" : "");
       const pct = p.cases ? (100 * r.answered) / p.cases : 0;
       d.innerHTML = "<b></b><span></span><div class='pbar'><i></i></div>";
-      d.querySelector("b").textContent = r.name;
+      d.querySelector("b").textContent = r.name || "Annotator " + r.annotator;
       d.querySelector("span").textContent = r.answered + " / " + p.cases;
       d.querySelector("i").style.width = pct + "%";
       T.appendChild(d);
     }
-    if (!p.reviewers.length) T.textContent = "No answers yet.";
+    if (!p.reviewers.length) T.textContent = "No annotations yet.";
     $("team").hidden = false;
   } catch (e) { /* progress is a nicety; answers are what matters */ }
 }
 setInterval(() => { if (me && !document.hidden) team(); }, 15000);
 
 function showWho() {
+  $("dl").classList.toggle("primary", !me);
   const w = $("who");
   w.hidden = !me;
   if (!me) return;
@@ -251,7 +252,7 @@ async function join(s) {
   try { localStorage.setItem("retify.session", JSON.stringify(me)); } catch (e) { /* this tab only */ }
   restore();
   showWho();
-  $("setname").textContent = set.title + " · answers are saved automatically";
+  $("setname").textContent = set.title;
   try {
     const got = (await api("GET", "/labels?set=" + encodeURIComponent(set.id) + "&session=" + me.id)).labels;
     const mine = [];
@@ -264,13 +265,14 @@ async function join(s) {
     if (mine.length) queue(mine); else flush();
   } catch (e) {
     if (e.status === 403) return enter("Please type your name again.");
-    save("No connection — your answers are kept on this computer and saved when the connection is back", true);
+    save("No connection — your annotations are kept on this computer and saved when the connection is back", true);
   }
   team();
   const k = nextTodo(0);
   i = k < 0 ? 0 : k;
   show();
   if (k < 0) finished();
+  welcome();
 }
 let asked;
 function ask(why) {
@@ -283,14 +285,18 @@ function ask(why) {
   return new Promise((done) => (asked = done));
 }
 // the first visit in this browser: a short welcome, before anything else
+// The welcome, for someone new: once the session is known (the owner's choice), if it has no answers yet
+// (a new reviewer, or one who never answered), once per session in this browser. Without a session, when
+// this browser has no answers.
 function welcome() {
+  const k = "retify.welcomed" + (me ? "." + me.id : "");
   let seen = false;
-  try { seen = localStorage.getItem("retify.welcomed") === "1"; } catch (e) { /* show it */ }
-  if (seen) return Promise.resolve();
+  try { seen = localStorage.getItem(k) === "1"; } catch (e) { /* show it */ }
+  if (seen || files.some((f) => st(f) !== "p")) return Promise.resolve();
   $("welcome").hidden = false;
   return new Promise((done) => ($("welcomeok").onclick = () => {
     $("welcome").hidden = true;
-    try { localStorage.setItem("retify.welcomed", "1"); } catch (e) { /* once per page then */ }
+    try { localStorage.setItem(k, "1"); } catch (e) { /* once per page then */ }
     done();
   }));
 }
@@ -298,12 +304,12 @@ function welcome() {
 async function enter(why) {
   const s = await ask(why);
   if (s) return join(s);
-  if (!me) local();
+  if (!me) { local(); welcome(); }
 }
 function local() {
   me = null;
   showWho();
-  $("setname").textContent = set.title + " · answers stay in this browser until you download them";
+  $("setname").textContent = set.title;
   restore();
   const k = nextTodo(0);
   i = k < 0 ? 0 : k;
@@ -332,14 +338,14 @@ async function findSession(e) {
     if (matches.length) {
       say("We found these sessions for “" + name + "”. Is one of them yours?");
       for (const m of matches) {
-        choice(m.name, m.answered + " answered", async () => { try { closeAsk(await api("POST", "/sessions/enter", { id: m.id })); } catch (x) { say("That did not work. Please try again."); } }, true);
+        choice(m.name, m.answered + " annotated", async () => { try { closeAsk(await api("POST", "/sessions/enter", { id: m.id })); } catch (x) { say("That did not work. Please try again."); } }, true);
       }
       choice("None of these is me", "start a new session", () => newSession(name));
     } else {
       newSession(name, "No session was found for “" + name + "”. Would you like to start a new session?");
     }
   } catch (x) {
-    say("No connection right now. Please try again, or choose Continue Without Saving and download your answers when you finish.");
+    say("No connection right now. Please try again, or choose Continue Without Saving and download your annotations when you finish.");
   }
 }
 // a new session needs the full name, so that a reviewer finds it again and is not confused with another
@@ -349,7 +355,7 @@ function newSession(typed, why) {
   const p = document.createElement("p");
   p.textContent = (why ? why + " " : "") + "Please enter your full name, first and last.";
   const f = document.createElement("form");
-  f.innerHTML = "<input class='note' id='fullname' autocomplete='name' placeholder='e.g., Tina Vascullensky' maxlength='80'>" +
+  f.innerHTML = "<input class='field' id='fullname' autocomplete='name' placeholder='e.g., Tina Vascullensky' maxlength='80'>" +
     "<div class='row'><button type='submit' class='primary'>Start a new session</button></div>";
   R.append(p, f);
   const input = f.querySelector("input");
@@ -394,7 +400,7 @@ $("go").onkeydown = (e) => {
   const byName = (s) => { const a = files.findIndex((f) => f.toLowerCase().startsWith(s + "_")); return a >= 0 ? a : files.findIndex((f) => f.toLowerCase().includes(s)); };
   const k = /^\d+$/.test(v) && +v >= 1 && +v <= files.length ? +v - 1 : byName(v.toLowerCase());
   if (k >= 0 && k < files.length) { go(k); $("go").value = ""; $("go").blur(); }
-  else { $("go").style.borderColor = "#b8433b"; setTimeout(() => ($("go").style.borderColor = ""), 900); }
+  else { $("go").style.borderColor = "var(--no)"; setTimeout(() => ($("go").style.borderColor = ""), 900); }
 };
 // ---------- the picture: scroll to zoom at the pointer, drag to move; never smaller than it fits ----------
 // view.s is the zoom over the fitted picture (1 = it fits the frame); view.x, view.y its top left corner in the frame
@@ -439,11 +445,98 @@ const fullSize = () => { $("vimg").src = $("img").src; $("viewer").hidden = fals
 $("fullsize").onclick = fullSize;
 $("viewer").onclick = () => ($("viewer").hidden = true);
 $("help").onclick = () => {
-  if (me) $("helpstore").innerHTML = "Your answers are saved automatically under your name (<b>" + me.name.replace(/[<&]/g, "") +
-    "</b>). To continue on another computer, open this page there and type the same name. Others see only how many cases you have answered, never your answers. <b>Download answers</b> gives you a copy.";
+  if (me) $("helpstore").innerHTML = "Your annotations are saved automatically under your name (<b>" + me.name.replace(/[<&]/g, "") +
+    "</b>). To continue on another computer, open this page there and type the same name. Others see only how many cases you have annotated, never your annotations. <b>Download annotations</b> gives you a copy.";
   $("helpbox").hidden = false;
 };
 $("helpok").onclick = () => ($("helpbox").hidden = true);
+$("rules").onclick = $("rulesbtn").onclick = () => $("help").click();
+
+// ---------- bright or dark: bright by default; the eye at the top left switches, and the choice is kept per browser ----------
+const ICONS = {
+  moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+};
+const darkNow = () => document.documentElement.dataset.theme === "dark";
+function themeButton() {
+  // the eye says what it switches to, not what the page is
+  const to = darkNow() ? "bright" : "dark";
+  $("themecap").textContent = "Switch to " + to;
+  $("themebadge").innerHTML = to === "dark" ? ICONS.moon : ICONS.sun;
+  $("theme").title = "Switch to " + to;
+  $("theme").setAttribute("aria-label", $("theme").title);
+}
+$("theme").onclick = () => {
+  const t = darkNow() ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("retify.theme", t); } catch (e) { /* this page only */ }
+  themeButton();
+};
+themeButton();
+
+// ---------- the task's words and the guidelines: web/guidelines.json, which the owner edits (on GitHub, say) ----------
+// Its texts are plain; **two stars** make words bold.
+function rich(el, text) {
+  el.replaceChildren();
+  String(text).split(/\*\*/).forEach((part, k) => {
+    if (!part) return;
+    if (k % 2) { const b = document.createElement("b"); b.textContent = part; el.append(b); } else el.append(part);
+  });
+  return el;
+}
+function guideItem(cls, label, text) {
+  const li = document.createElement("li");
+  if (cls) li.className = cls;
+  if (label) { const b = document.createElement("b"); b.textContent = label; li.append(b, " "); }
+  li.append(rich(document.createElement("span"), text));
+  return li;
+}
+async function guidelines() {
+  try {
+    const r = await fetch("guidelines.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const g = await r.json();
+    const items = (k) => (Array.isArray(g[k]) ? g[k] : []).filter((x) => x && typeof (x.short || x.full) === "string");
+    const fine = items("fine"), bad = items("not_fine");
+    const notes = (Array.isArray(g.notes) ? g.notes : []).filter((x) => typeof x === "string");
+    if (!fine.length && !bad.length) throw new Error("it lists no guidelines");
+    // the question, the sentence under it, the introduction, the two buttons
+    const text = (k, fallback) => (typeof g[k] === "string" && g[k].trim() ? g[k] : fallback);
+    $("question").textContent = text("question", "");
+    rich($("task"), text("task", ""));
+    document.querySelectorAll(".intro").forEach((el) => rich(el, text("intro", "")));
+    $("yeslabel").textContent = text("yes", "Yes");
+    $("nolabel").textContent = text("no", "No");
+    const short = (list) => list.map((x) => x.short || x.full);
+    // the bar above the photo: the short forms
+    const line = (cls, label, list) => {
+      const d = document.createElement("div");
+      d.className = cls;
+      const b = document.createElement("b");
+      b.textContent = label;
+      d.append(b, " " + short(list).join(" · "));
+      return d;
+    };
+    $("rules").replaceChildren(line("ok", "✓ Fine:", fine), line("bad", "✗ Not fine:", bad));
+    // How to: the full forms, then the notes
+    $("guide").replaceChildren(...fine.map((x) => guideItem("ok", "Fine:", x.full || x.short)),
+      ...bad.map((x) => guideItem("bad", "Not fine:", x.full || x.short)), ...notes.map((t) => guideItem("", "", t)));
+    // the welcome: the short forms in a sentence
+    const w = $("welcomerules");
+    w.replaceChildren();
+    const say = (label, list) => { const b = document.createElement("b"); b.textContent = label; w.append(b, " " + short(list).join(", ") + ". "); };
+    if (fine.length) say("Fine:", fine);
+    if (bad.length) say("Not fine:", bad);
+  } catch (e) {
+    const msg = "The guidelines could not be loaded (" + e.message + "). Please reload the page.";
+    $("question").textContent = "The task could not be loaded";
+    $("task").textContent = msg;
+    $("rules").replaceChildren(Object.assign(document.createElement("div"), { textContent: msg }));
+    $("guide").replaceChildren(guideItem("", "", msg));
+    $("welcomerules").textContent = msg;
+  }
+}
+guidelines();
 $("dl").onclick = $("dl2").onclick = openDl;
 $("dlxlsx").onclick = dl.xlsx; $("dlcsv").onclick = dl.csv; $("dljson").onclick = dl.json;
 $("dlclose").onclick = () => ($("dlbox").hidden = true);
@@ -486,12 +579,12 @@ $("img").onload = () => { if ($("save").classList.contains("err") && /image/.tes
   if (!set || !set.cases || !set.cases.length) return fail("The image folder lists no cases.");
   set.dir = (set.dir || "").replace(/\/?$/, "/").replace(/^\/$/, "");
   files = set.cases;
-  $("setname").textContent = set.title + " · answers stay in this browser until you download them";
+  $("setname").textContent = set.title;
   document.title = "Retify · " + set.title;
   if (sets.length > 1) {        // several image sets: a menu at the top of the queue
     const sel = document.createElement("select");
     sel.id = "setsel";
-    sel.style.cssText = "width:100%;margin:0 0 10px;padding:7px;border:1px solid #d3dde3;border-radius:8px;background:#fff";
+    sel.className = "setsel";
     for (const s of sets) sel.add(new Option(s.title + " (" + s.cases.length + ")", s.id, false, s === set));
     sel.onchange = () => { params.set("set", sel.value); location.search = params.toString(); };
     $("filter").parentElement.insertBefore(sel, $("filter").parentElement.children[2]);
@@ -501,6 +594,5 @@ $("img").onload = () => { if ($("save").classList.contains("err") && /image/.tes
   try { s = JSON.parse(localStorage.getItem("retify.session") || "null"); } catch (e) { /* ask */ }
   if (s && s.id && s.key) return join(s);
   local();          // the page works behind the question, in this browser, until a session is chosen
-  await welcome();
   enter();
 })();

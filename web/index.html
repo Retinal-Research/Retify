@@ -5,76 +5,81 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Retify · Hallucination review</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script>try{var t=localStorage.getItem("retify.theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="stylesheet" href="style.css">
 <script src="config.js"></script>
 </head>
 <body>
 <header class="top">
- <div class="mark"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg></div>
- <div class="brand"><div class="eyebrow">Enhancement review</div><h1>Retify · Hallucination review</h1><div class="sub" id="setname">Loading…</div></div>
- <div class="top-right"><span id="who" hidden></span><span id="save">Saved in this browser</span>
-  <button id="help">How to</button><button id="loadbtn" title="Continue from an answers file downloaded earlier">Load answers</button>
-  <button class="primary" id="dl" title="Download your answers as a spreadsheet">Download answers</button></div>
+ <button class="markbtn" id="theme" title="Switch to dark" aria-label="Switch to dark"><span class="mark"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg><span class="badge" id="themebadge"></span></span><span class="themecap" id="themecap">Switch to dark</span></button>
+ <div class="brand"><div class="eyebrow">Retify · Enhancement review</div><h1 id="question"></h1>
+  <div class="sub" id="task"></div></div>
+ <div class="top-right"><div class="status"><span id="who" hidden></span><span id="save">Saved in this browser</span></div>
+  <button class="howto" id="help" title="How to annotate, with the full guidelines"><span class="q">?</span>How to</button>
+  <div class="stack"><button id="loadbtn" title="Continue from an annotations file downloaded earlier">Load annotations</button>
+  <button class="primary" id="dl" title="Download your annotations as a spreadsheet">Download annotations</button></div></div>
 </header>
+<div class="team" id="team" hidden><div class="eyebrow">Everyone's progress <span class="muted">· annotations stay private</span></div><div id="teamrows"></div></div>
 <div class="work">
  <aside class="side">
-  <div class="eyebrow">Review queue</div><h2>Cases <span id="ntotal"></span></h2>
+  <div class="eyebrow">Review queue</div><h2>Cases <span id="ntotal"></span></h2><div class="setname" id="setname">Loading…</div>
   <div class="prog"><div class="pline"><span>Progress</span><b id="pdone"></b></div><div class="pbar"><i id="pbar"></i></div>
-   <div class="pline"><span>Pass <b id="pyes"></b></span><span>Halluc. <b id="pno"></b></span><span>Left <b id="pleft"></b></span></div></div>
-  <div class="team" id="team" hidden><div class="lbl">Everyone's progress <span class="muted">(answers stay private)</span></div><div id="teamrows"></div></div>
+   <div class="pline"><span>Yes <b id="pyes"></b></span><span>No <b id="pno"></b></span><span>Left <b id="pleft"></b></span></div></div>
   <div class="lbl">Show</div>
-  <div class="seg" id="filter"><button data-f="all" class="on">All</button><button data-f="p">To do</button><button data-f="y">Pass</button><button data-f="n">Halluc.</button></div>
+  <div class="seg" id="filter"><button data-f="all" class="on">All</button><button data-f="p">To do</button><button data-f="y">Yes</button><button data-f="n">No</button></div>
   <div class="lbl">Go to case number or file name</div><input id="go" placeholder="e.g. 125 or 13026_right">
-  <div class="legend"><span class="lg-p">To do</span><span class="lg-y">Pass</span><span class="lg-n">Hallucination</span></div>
+  <div class="legend"><span class="lg-p">To do</span><span class="lg-y">Yes</span><span class="lg-n">No</span></div>
   <div id="list"></div>
  </aside>
  <main>
-  <div class="instr">
-   <div class="eyebrow">The only question</div>
-   <div class="q">Is the ENHANCED image free of hallucinations?</div>
-   <div class="r">Compare the enhanced picture (B) with the original (A). Answer <b>No</b> if vessels were <b>added, lost, moved or bent</b>; otherwise <b>Yes</b>. Ignore changes of color, brightness and sharpness.<br>
-   In panel C: <span class="dot" style="background:#4096ff"></span><b>blue</b> = new vessel · <span class="dot" style="background:#ff3c3c"></span><b>red</b> = lost vessel. The yellow boxes 1–4 are shown close up in panel D. The colors are only a guide; trust your eyes.</div>
-  </div>
   <div id="caseview">
    <div class="toolbar"><h2 id="title"></h2><span class="pill" id="fname"></span><span class="state p" id="state"></span>
+    <div class="rules" id="rules" title="Click for the full guidelines"><div>Loading the guidelines…</div></div>
+    <button class="rulesbtn" id="rulesbtn" title="The full guidelines">Guidelines</button>
     <div class="navr"><button id="prev">← Previous</button><button id="next">Next →</button><button id="nextp">Next to do</button></div></div>
    <div class="card"><div class="stage" id="stage"><img id="img" alt="case image" draggable="false"></div>
-    <div class="viewbtns"><button id="resetview" title="Back to the whole picture (double-click the picture)">Reset view</button><button id="fullsize" title="See the picture full size (Enter)">Full size</button></div>
-    <span class="zoomhint">Scroll to zoom · drag to move</span></div>
+    <div class="viewbtns glass"><button id="resetview" title="Back to the whole photo (double-click the photo)">Reset view</button><button id="fullsize" title="See the photo full size (Enter)">Full size</button></div>
+    <div class="vlegend glass" aria-label="Colors in panel C"><span><i style="background:#4096ff"></i>New vessel</span><span><i style="background:#ff3c3c"></i>Lost vessel</span><span><i style="background:#2bd45a"></i>In both</span><small>Scroll to zoom<br>Drag to move</small></div></div>
    <div class="answer">
-    <div class="big"><button class="yes" id="yes">Yes — passes<small>press Y</small></button><button class="no" id="no">No — hallucination<small>press N</small></button></div>
-    <input class="note" id="note" placeholder="Optional note for this case (saved automatically)">
+    <div class="big"><button class="yes" id="yes"><span id="yeslabel">Yes</span><small>press Y</small></button><button class="no" id="no"><span id="nolabel">No</span><small>press N</small></button></div>
+    <input class="note" id="note" placeholder="Optional note (saved automatically)">
    </div>
   </div>
-  <div class="done" id="doneview" hidden><h2>All cases are answered — thank you!</h2>
-   <p id="donemsg">Please <b>download your answers</b> and send the file back to us.</p>
-   <p><button class="primary" id="dl2">Download answers (labels.xlsx)</button></p>
-   <p class="muted">You can still click any case on the left to review or change it.</p></div>
+  <div class="done" id="doneview" hidden><h2>All cases are annotated — thank you!</h2>
+   <p id="donemsg">Please <b>download your annotations</b> and send the file back to us.</p>
+   <p><button class="primary" id="dl2">Download annotations (labels.xlsx)</button></p>
+   <p class="muted">You can still click any case on the left to look at it again or change it.</p></div>
   <div class="done" id="errview" hidden><h2>The images could not be loaded</h2><p id="errmsg"></p></div>
  </main>
 </div>
-<div class="modal" id="welcome" hidden><div class="box" style="width:min(600px,92vw)"><h2>Welcome to Retify</h2>
- <p>A computer made each poor photo of the eye clearer. Sometimes it gets the vessels wrong. Your task: say whether the clearer picture still shows the same vessels.</p>
+<div class="modal" id="welcome" hidden><div class="box" style="width:min(620px,92vw)"><h2>Welcome to Retify</h2>
+ <p class="lead intro"></p>
  <ol class="steps">
-  <li>Compare the enhanced picture (<b>B</b>) with the original (<b>A</b>).</li>
-  <li>In panel <b>C</b>: <span class="dot" style="background:#4096ff"></span><b>blue</b> = new vessel, <span class="dot" style="background:#ff3c3c"></span><b>red</b> = lost vessel. The colors are only a guide; trust your eyes.</li>
-  <li>Click <b>Yes</b> if the vessels are the same, <b>No</b> if vessels were added, lost, moved or bent. Or press <kbd>Y</kbd> / <kbd>N</kbd>.</li>
+  <li>Compare the enhanced photo (<b>B</b>) with the original (<b>A</b>).</li>
+  <li id="welcomerules">The guidelines are loading…</li>
+  <li>Panel <b>C</b> shows where to look: <span class="dot" style="background:#4096ff"></span>blue = new vessel, <span class="dot" style="background:#ff3c3c"></span>red = lost vessel. Decide from the photos, not from the colors.</li>
+  <li>Choose <b>Yes</b> or <b>No</b> under the photo, or press <kbd>Y</kbd> / <kbd>N</kbd>.</li>
  </ol>
- <p>Scroll on the picture to zoom in. <b>How to</b> at the top shows this again.</p>
+ <p>Scroll on the photo to zoom in. <b>How to</b>, at the top, has the full guidelines. The <b>eye</b> at the top left switches the page between bright and dark.</p>
  <div class="row"><button class="primary" id="welcomeok">Start</button></div></div></div>
-<div class="modal" id="helpbox" hidden><div class="box" style="width:min(660px,92vw)"><h2>How to review</h2>
- <p>Each picture has four parts: <b>A</b> the original, <b>B</b> the enhanced picture, <b>C</b> the vessels of both (<span class="dot" style="background:#4096ff"></span>blue = new vessel, <span class="dot" style="background:#ff3c3c"></span>red = lost vessel, green = in both), <b>D</b> close-ups of the yellow boxes.</p>
- <p>Click <b>No</b> if vessels in B were added, lost, moved or bent compared with A; otherwise click <b>Yes</b>. The next case opens by itself. You can go back to any case from the list on the left and change your answer.</p>
- <p>On the picture: scroll to zoom in, drag to move around, double-click (or <b>Reset view</b>) to see it whole again. <b>Full size</b> opens it on the whole screen.</p>
- <p>Keys: <kbd>Y</kbd> yes, passes · <kbd>N</kbd> no, hallucination · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>Enter</kbd> full size · <kbd>0</kbd> reset view.</p>
- <p id="helpstore">Your answers are kept in this browser on this computer only; nothing is uploaded. You can close the page and continue later in the same browser. When finished, click <b>Download answers</b> and send us the file. To continue on another computer, download the answers there first, then use <b>Load answers</b>.</p>
+<div class="modal" id="helpbox" hidden><div class="box" style="width:min(720px,94vw)"><h2>How to annotate</h2>
+ <p class="lead intro"></p>
+ <h3>What you see</h3>
+ <p><b>A</b> the original photo · <b>B</b> the enhanced photo · <b>C</b> the vessels a computer traced in both (<span class="dot" style="background:#4096ff"></span>blue = new vessel, <span class="dot" style="background:#ff3c3c"></span>red = lost vessel, <span class="dot" style="background:#2bd45a"></span>green = in both) · <b>D</b> close-ups of the yellow boxes 1–4: original, enhanced, enhanced with outlines, and the original in red-free light, where vessels show best.</p>
+ <h3>Guidelines</h3>
+ <ul class="guide" id="guide"><li>Loading the guidelines…</li></ul>
+ <h3>Working through the cases</h3>
+ <p>Choose <b>Yes</b> or <b>No</b> (or press <kbd>Y</kbd> / <kbd>N</kbd>); the next case opens by itself. You can go back to any case from the list on the left and change it. On the photo, scroll to zoom in, drag to move around, and double-click (or <b>Reset view</b>) to see it whole again; <b>Full size</b> opens it on the whole screen.</p>
+ <p>Keys: <kbd>Y</kbd> yes · <kbd>N</kbd> no · <kbd>←</kbd> <kbd>→</kbd> previous / next · <kbd>Enter</kbd> full size · <kbd>0</kbd> reset view.</p>
+ <p>The <b>eye</b> at the top left switches the page between bright and dark; the line under it says which one it switches to.</p>
+ <p id="helpstore">Your annotations are kept in this browser on this computer only; nothing is uploaded. You can close the page and continue later in the same browser. When finished, click <b>Download annotations</b> and send us the file. To continue on another computer, download the annotations here, then use <b>Load annotations</b> there.</p>
  <div class="row"><button class="primary" id="helpok">Got it</button></div></div></div>
-<div class="modal" id="sessbox" hidden><div class="box"><h2>Who is reviewing?</h2>
- <p>Type your name to continue where you left off. Your answers are saved automatically, so you can continue on any computer. Others see only how many cases you have answered.</p>
- <form id="sessform"><input class="note" id="sessname" autocomplete="name" placeholder="e.g., Tina" maxlength="80"></form>
+<div class="modal" id="sessbox" hidden><div class="box"><h2>Who is annotating?</h2>
+ <p>Type your name to continue where you left off. Your annotations are saved automatically, so you can continue on any computer. Others see only how many cases you have annotated.</p>
+ <form id="sessform"><input class="field" id="sessname" autocomplete="name" placeholder="e.g., Tina" maxlength="80"></form>
  <div id="sessres"></div>
- <div class="row" id="sessrow"><button id="sesslocal" title="Answers stay on this computer only; download them when you finish">Continue Without Saving</button><button class="primary" id="sessfind">Find my session</button></div></div></div>
-<div class="modal" id="dlbox" hidden><div class="box"><h2>Download answers</h2>
+ <div class="row" id="sessrow"><button id="sesslocal" title="Annotations stay on this computer only; download them when you finish">Continue Without Saving</button><button class="primary" id="sessfind">Find my session</button></div></div></div>
+<div class="modal" id="dlbox" hidden><div class="box"><h2>Download annotations</h2>
  <p id="dlsum"></p>
  <div class="row"><button id="dljson">JSON</button><button id="dlcsv">CSV</button><button class="primary" id="dlxlsx">Excel (.xlsx)</button><button id="dlclose">Close</button></div></div></div>
 <div class="viewer" id="viewer" hidden><img id="vimg" alt=""></div>

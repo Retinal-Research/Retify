@@ -14,7 +14,9 @@ still enter that session; every answer is therefore appended to a log that is ne
 time and a salted hash of the caller's IP, so a change can be traced and undone.
 
 Everyone may see everyone's progress (how many cases each session answered), never the answers, so
-that reviewers judge each case independently.
+that reviewers judge each case independently, and never session ids (an id is enough to enter a
+session). Names in it are masked, as the owner chose ("Tina" -> "Ti*a", "Sai" -> "S*i"): enough for
+the team to recognise each other, not the full name.
 
 Files in data_dir (outside the repository):
   sessions.json                       sessions: id, name, created, hashes of their keys
@@ -66,6 +68,22 @@ DEFAULTS = {
 
 def now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def masked(name: str) -> str:
+    """A name with the middle of each word hidden: the first half and the last letter stay. "Tina" -> "Ti*a",
+    "Sai" -> "S*i", "Vascullensky" -> "Vascul*****y", "Wang," -> "Wa*g,"."""
+    def one(w: str) -> str:
+        core = w.rstrip(",.;")
+        tail = w[len(core):]
+        n = len(core)
+        if n <= 1:
+            return w
+        if n == 2:
+            return core[0] + "*" + tail
+        keep = n // 2
+        return core[:keep] + "*" * (n - keep - 1) + core[-1] + tail
+    return " ".join(one(w) for w in name.split())
 
 
 def words(name: str) -> set[str]:
@@ -222,19 +240,37 @@ class Store:
             self.dirty.update({p, log})
         return len(clean)
 
-    def progress(self, set_id: str) -> dict:
+    def _first(self, set_id: str, sid: str) -> str:
+        """When the session first answered in the set: the first line of its log, which is never rewritten."""
+        k = ("first", set_id, sid)
+        if k not in self.current:
+            log = self.dir / "log" / set_id / f"{sid}.jsonl"
+            first = ""
+            if log.exists():
+                with log.open(encoding="utf-8") as f:
+                    line = f.readline()
+                first = json.loads(line)["received"] if line.strip() else ""
+            if not first:
+                return ""
+            self.current[k] = first
+        return self.current[k]
+
+    def progress(self, set_id: str, me: str = "") -> dict:
+        """Each reviewer's count with the masked name, in the order they first answered; the caller's marked "you"."""
         cases = self.sets().get(set_id)
         if cases is None:
             raise HttpError(400, f"no image set {set_id!r}")
         with self.lock:
             rows = []
-            for sid, x in self.sessions.items():
+            for sid in self.sessions:
                 n = self.answered(sid, set_id)
                 if n:  # sessions that never answered (a mistyped name, say) are left out
                     last = max((v.get("time") or "" for v in self._current(set_id, sid).values()), default="")
-                    rows.append({"id": sid, "name": x["name"], "answered": n, "last": last})
-        rows.sort(key=lambda r: (-r["answered"], r["name"].lower()))
-        return {"set": set_id, "cases": len(cases), "reviewers": rows}
+                    rows.append({"sid": sid, "first": self._first(set_id, sid), "answered": n, "last": last})
+        rows.sort(key=lambda r: (r["first"], r["sid"]))
+        out = [{"annotator": i + 1, "name": masked(self.sessions[r["sid"]]["name"]), "answered": r["answered"], "last": r["last"],
+                **({"you": True} if r["sid"] == me else {})} for i, r in enumerate(rows)]
+        return {"set": set_id, "cases": len(cases), "reviewers": out}
 
 
 class Limiter:
@@ -369,7 +405,13 @@ def make_handler(store: Store, limiter: Limiter, s: dict):
             if method == "GET" and path == "/status":
                 return {"ok": True, "version": VERSION, "sets": sorted(store.sets())}
             if method == "GET" and path == "/progress":
-                return store.progress(q.get("set", ""))
+                sid = q.get("session", "")
+                if sid:  # only a browser holding that session's key learns which row is its own
+                    try:
+                        store.check(sid, self.headers.get("X-Retify-Key", ""))
+                    except HttpError:
+                        sid = ""
+                return store.progress(q.get("set", ""), sid)
             if method == "POST" and path == "/sessions/find":
                 name = str(self.body().get("name", ""))[:MAX_NAME]
                 return {"matches": store.find(name)}

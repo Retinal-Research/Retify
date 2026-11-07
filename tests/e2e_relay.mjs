@@ -69,28 +69,30 @@ const saved = `/^Saved ·/.test($("save").textContent)`;
 
 // 1. a new reviewer creates a session by name and answers two cases
 const a = await open(9338);
-check("a first visit shows the welcome first", await a.js(`!$("welcome").hidden && $("sessbox").hidden`));
-await a.js(`$("welcomeok").click()`); await sleep(300);
-check("then the page asks who is reviewing", await a.js(`!$("sessbox").hidden`));
+check("the page first asks who is reviewing (no welcome yet)", await a.js(`!$("sessbox").hidden && $("welcome").hidden`));
 await find(a, "Tester");
 check("an unknown name offers a new session", /No session was found/.test(await a.js(`$("sessres").textContent`)));
 await a.js(`$("fullname").value="Reviewer";$("fullname").form.requestSubmit()`); await new Promise((r) => setTimeout(r, 300));
 check("a new session needs the full name", /full name/.test(await a.js(`$("sessres").textContent`)) && !(await a.js(`$("sessbox").hidden`)));
 await a.js(`$("fullname").value="Test Reviewer";$("fullname").form.requestSubmit()`);
 await a.until(`$("sessbox").hidden`);
+check("a new reviewer then gets the welcome", await a.until(`!$("welcome").hidden`));
+await a.js(`$("welcomeok").click()`); await sleep(300);
 check("the top bar names the reviewer", /Test Reviewer/.test(await a.js(`$("who").textContent`)));
 await a.js(`answer(0)`); await a.js(`answer(1)`);
 check("the answers reach the lab", await a.until(saved), await a.js(`$("save").textContent`));
-check("everyone's progress shows the count", await a.until(`/Test Reviewer\\s*2 \\/ /.test($("teamrows").innerText)`), await a.js(`$("teamrows").innerText`));
+check("everyone's progress shows the count with the masked name, marked as this reviewer",
+  await a.until(`/Te\\*t Revi\\*\\*\\*r\\s*2 \\/ /.test($("teamrows").innerText) && !!document.querySelector("#teamrows .trow.me")`), await a.js(`$("teamrows").innerText`));
+check("and no full names in it", !/Test Reviewer/.test(await a.js(`$("teamrows").innerText`)));
 await a.shot("relay_1_reviewing.png");
 
 // 2. another browser finds the session by part of the name; the answers come back
 const b = await open(9339);
-await b.js(`$("welcomeok").click()`); await sleep(300);
 await find(b, "reviewer");
-check("part of the name finds the session", /We found these sessions[\s\S]*Test Reviewer[\s\S]*2 answered/.test(await b.js(`$("sessres").textContent`)));
+check("part of the name finds the session", /We found these sessions[\s\S]*Test Reviewer[\s\S]*2 annotated/.test(await b.js(`$("sessres").textContent`)));
 await b.js(`document.querySelector("#sessres .sess.primary").click()`);
 check("the answers come back in the other browser", await b.until(`$("pdone").textContent.startsWith("2 /")`), await b.js(`$("pdone").textContent`));
+check("a reviewer who has answered gets no welcome", await b.js(`$("welcome").hidden`));
 b.close();
 
 // 3. with the relay down, answers wait in the browser; when it is back, they are sent

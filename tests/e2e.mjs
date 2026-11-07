@@ -48,6 +48,13 @@ await cdp("Page.enable"); await cdp("Runtime.enable");
 await cdp("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: outdir });
 await cdp("Page.navigate", { url }); await sleep(3000);
 check("a first visit shows the welcome", await js(`!$("welcome").hidden`));
+check("bright by default; the eye offers dark", await js(`!document.documentElement.dataset.theme && $("themecap").textContent === "Switch to dark"`));
+check("the question, the sentence under it and the buttons come from guidelines.json",
+  await js(`$("question").textContent.length > 10 && $("task").querySelectorAll("b").length > 0 && $("yeslabel").textContent.startsWith("Yes") && document.querySelector(".intro").textContent.length > 20`),
+  await js(`$("question").textContent`));
+check("the guidelines come from guidelines.json", await js(`$("rules").textContent.includes("Fine:") && $("rules").textContent.includes("Not fine:") && $("guide").children.length >= 5 && $("welcomerules").textContent.includes("Not fine:")`),
+  await js(`$("rules").textContent.slice(0, 60)`));
+check("the eye switches bright and dark, and the choice is kept", await js(`(()=>{$("theme").click();const d=document.documentElement.dataset.theme;$("theme").click();return d!==document.documentElement.dataset.theme&&localStorage.getItem("retify.theme")===document.documentElement.dataset.theme})()`));
 await js(`$("welcomeok").click()`); await sleep(300);
 
 const n = await js(`files.length`);
@@ -59,7 +66,7 @@ if (mode !== "shot-only" && n >= 3) {
   await key("y", "KeyY"); await key("n", "KeyN");
   await js(`$("note").value="e2e note";$("note").dispatchEvent(new Event("input"))`); await sleep(900);
   await key("ArrowLeft", "ArrowLeft");
-  check("back to case 2, answered No", (await js(`$("state").textContent`)) === "Answered: No (hallucination)");
+  check("back to case 2, annotated No", (await js(`$("state").textContent`)) === "Annotated: No");
   await cdp("Page.reload"); await sleep(2500);
   check("answers survive a reload", (await js(`$("pdone").textContent`)).startsWith("2 /"));
   check("note survives a reload", (await js(`lab[files[2]].note`)) === "e2e note");

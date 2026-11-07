@@ -11,10 +11,12 @@
 
 Enhancement models can make a poor fundus photograph look clear, but they can also invent vessels, drop vessels or bend them. Measurements of the vessel tree taken from such a photograph would then be wrong. Retify collects expert judgements of which enhanced photographs can be trusted, so that a detector can later learn to flag the ones that cannot.
 
-Reviewers answer one question per case:
+Reviewers judge one question per case:
 
-> **Is the ENHANCED image free of hallucinations?**
-> Yes = passes. No = hallucination: vessels were added, lost, moved or bent compared with the original.
+> **Does the enhanced photo show only real vessels?**
+> A computer made the original photo (A) clearer (B). Yes if every vessel in B is real; No if it made any up.
+
+The words of the task (the question, the sentence under it, the introduction, the two buttons) and the guidelines, what is fine and what is not, live in [`web/guidelines.json`](web/guidelines.json): the page reads them from there, the guidelines in short in the bar above the photo and in full under **How to**. To change them, edit that file on GitHub and commit to `main`; the page is republished about a minute later. A file that is not valid JSON is refused at publishing, and the page keeps the last good guidelines.
 
 Each case is one picture with four panels:
 
@@ -31,17 +33,19 @@ The automatic tracing only points to where to look; the reviewer's judgement of 
 
 Open the review page. There is nothing to install and no account.
 
-- The first visit opens a short welcome. In panel C, **blue** = new vessel and **red** = lost vessel.
-- Click **Yes** or **No** under the picture, or press <kbd>Y</kbd> / <kbd>N</kbd>. The next unanswered case opens.
-- <kbd>←</kbd> <kbd>→</kbd> move between cases; any answer can be changed. Scroll on the picture to zoom in and drag to move around; double-click it or click **Reset view** to see it whole. **Full size** (or <kbd>Enter</kbd>) opens it on the whole screen.
-- The list on the left shows every case: orange = to do, green = passes, red = hallucination. "Go to" takes a case number or a file name.
+- A new reviewer gets a short welcome after typing their name. In panel C, **blue** = new vessel, **red** = lost vessel and **green** = in both; the colors are also shown in a small box on the picture. The guidelines in short sit in the bar above the picture; **How to** has them in full.
+- **Bright or dark**: the page starts bright; the eye at the top left switches it, and the line under the eye says which one it switches to.
+- The strip under the top bar shows everyone's progress, with names partly hidden (e.g., Ti*a).
+- Click **Yes** or **No** under the picture, or press <kbd>Y</kbd> / <kbd>N</kbd>. The next case still to do opens.
+- <kbd>←</kbd> <kbd>→</kbd> move between cases; any annotation can be changed. Scroll on the picture to zoom in and drag to move around; double-click it or click **Reset view** to see it whole. **Full size** (or <kbd>Enter</kbd>) opens it on the whole screen.
+- The list on the left shows every case: orange = to do, green = Yes, red = No. "Go to" takes a case number or a file name.
 - An optional note can be typed for each case.
 
-**Answers are saved automatically.** The first time, the page asks for your name (e.g., Tina) and finds your session; if there is none, it asks for your full name (e.g., Tina Vascullensky) and starts a new one. To continue on another computer, type the same name there. Everyone sees how many cases each reviewer has answered, never their answers. Without a connection, answers are kept on your computer and saved when the connection is back.
+**Annotations are saved automatically.** The first time, the page asks for your name (e.g., Tina) and finds your session; if there is none, it asks for your full name (e.g., Tina Vascullensky) and starts a new one. To continue on another computer, type the same name there. Everyone sees how many cases each reviewer has annotated, never their annotations. Without a connection, annotations are kept on your computer and saved when the connection is back.
 
-**Continue Without Saving** keeps every answer only in that browser on that computer; download them when you finish and send us the file. The page can be closed at any time and continues where it stopped. When finished, click **Download answers** and send the Excel file (CSV and JSON are also offered). To move to another computer, download the answers, then use **Load answers** there; it reads the Excel, CSV or JSON file and keeps the newer answer for each case.
+**Continue Without Saving** keeps every annotation only in that browser on that computer; download them when you finish and send us the file. The page can be closed at any time and continues where it stopped. When finished, click **Download annotations** and send the Excel file (CSV and JSON are also offered). To move to another computer, download the annotations, then use **Load annotations** there; it reads the Excel, CSV or JSON file and keeps the newer annotation for each case.
 
-The answers file has one row per case: `no`, `image`, `hallucination` (1 = hallucination, 0 = passes, empty = not answered), `note`, `answered_at`.
+The annotations file has one row per case: `no`, `image`, `hallucination` (1 = made-up vessels, the No button; 0 = only real vessels, Yes; empty = not annotated), `note`, `annotated_at`. Files from before 2026-11-07 name the last column `answered_at`; Load reads both.
 
 ## Image sets
 
@@ -71,7 +75,7 @@ python tests/serve.py <data folder>
 
 serves the page and a local data folder from one address; open `http://127.0.0.1:8811/?data=/data/`. With a Hugging Face data URL, any static server works: `python -m http.server 8000 --directory web`, then `http://localhost:8000/?data=<URL>`. `node tests/e2e.mjs <page URL> <output folder>` runs the whole review in a headless Chrome or Edge and checks it.
 
-Maintainers and agents: [AGENTS.md](AGENTS.md) describes the design, the publishing steps, the rules, and the relay (`relay/relay.py`) that keeps the answers on the lab's server.
+Maintainers and agents: [AGENTS.md](AGENTS.md) describes the design, the publishing steps, the rules, and the relay (`relay/relay.py`) that keeps the annotations on the lab's server.
 
 ### Publishing images
 
@@ -90,7 +94,7 @@ hf repo tag create hwang714/retify-eyepacs v0.1.0 --repo-type dataset
 
 ## Offline version
 
-[`local/label_tool.py`](local/label_tool.py) is the same review page for a reviewer without a reliable connection. It serves a folder of pictures (`images/`, optional `order.txt`) on 127.0.0.1 and writes `labels.xlsx` and `labels.json` next to itself after every answer. Packed with PyInstaller it is a single program the reviewer double-clicks:
+[`local/label_tool.py`](local/label_tool.py) is the same review page for a reviewer without a reliable connection. It serves a folder of pictures (`images/`, optional `order.txt`) on 127.0.0.1 and writes `labels.xlsx` and `labels.json` next to itself after every annotation. It still has the wording and rule from before 2026-11-07. Packed with PyInstaller it is a single program the reviewer double-clicks:
 
 ```
 pip install openpyxl pyinstaller
